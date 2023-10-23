@@ -1,18 +1,24 @@
 #!/usr/bin/node
 
+const argv = process.argv;
 const request = require('request');
-const url = process.argv[2];
+const url = argv[2];
 
-request(url, (error, response, body) => {
-  if (!error) {
-    let length = 0;
-    for (const movie of JSON.parse(body).results) {
-      for (const char of movie.characters) {
-        if (char.includes(18)) {
-          length++;
+request(url, function (error, response, body) {
+  if (error) {
+    console.log(error);
+  } else {
+    const results = JSON.parse(body).results;
+    let counter = 0;
+    for (const result of results) {
+      const characters = result.characters;
+      for (const character of characters) {
+        const id = character.indexOf('18');
+        if (id !== -1) {
+          counter++;
         }
       }
     }
-    console.log(length);
+    console.log(counter);
   }
 });

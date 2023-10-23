@@ -1,21 +1,29 @@
 #!/usr/bin/node
+
 const argv = process.argv;
-const url = argv[2];
 const request = require('request');
+const url = argv[2];
+
 request(url, function (error, response, body) {
-    if (error) {
-        console.log(error);
-    } else {
-        const rbody = JSON.parse(body);
-        const dict = {};
-        for (const i of rbody) {
-            if (i.completed === true) {
-                if (dict[i.userId] === undefined) {
-                    dict[i.userId] = 0;
-                }
-                dict[i.userId] += 1;
-            }
-        }
-        console.log(dict);
+  if (error) {
+    console.error(error);
+  } else {
+    const results = JSON.parse(body);
+    const todosDone = {};
+    for (const result of results) {
+      const id = result.userId.toString();
+      if (!todosDone[id]) {
+        todosDone[id] = 0;
+      }
+      if (result.completed) {
+        todosDone[id]++;
+      }
     }
+    for (const key in todosDone) {
+      if (!todosDone[key]) {
+        delete todosDone[key];
+      }
+    }
+    console.log(todosDone);
+  }
 });
