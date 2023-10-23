@@ -1,29 +1,21 @@
-#!/usr/bin/node
-
-const argv = process.argv;
 const request = require('request');
-const url = argv[2];
+const url = process.argv[2];
 
 request(url, function (error, response, body) {
   if (error) {
-    console.error(error);
+    console.log(error);
   } else {
-    const results = JSON.parse(body);
-    const todosDone = {};
-    for (const result of results) {
-      const id = result.userId.toString();
-      if (!todosDone[id]) {
-        todosDone[id] = 0;
-      }
-      if (result.completed) {
-        todosDone[id]++;
-      }
-    }
-    for (const key in todosDone) {
-      if (!todosDone[key]) {
-        delete todosDone[key];
+    const todos = JSON.parse(body);
+    const tasksCompleted = {};
+    for (const task of todos) {
+      if (task.completed) {
+        if (tasksCompleted[task.userId]) {
+          tasksCompleted[task.userId] += 1;
+        } else {
+          tasksCompleted[task.userId] = 1;
+        }
       }
     }
-    console.log(todosDone);
+    console.log(tasksCompleted);
   }
 });
