@@ -1,39 +1,46 @@
 const http = require('http');
 const countStudents = require('./3-read_file_async');
 
-const hostname = '127.0.0.1';
 const port = 1245;
 
-const databaseFilename = process.argv[2];
+const app = http
+  .createServer(async (req, res) => {
+    if (req.url === '/') {
+      res.end('Hello Holberton School!');
+    } else if (req.url === '/students') {
+      res.write('This is the list of our students\n');
 
-const app = http.createServer((req, res) => {
-  if (req.url === '/students') {
-    countStudents(databaseFilename)
-      .then((data) => {
-        const response = `This is the list of our students\nNumber of students: ${data.totalStudents}\nNumber of students in CS: ${data.csStudentsCount}. List: ${data.csStudentsList.join(', ')}\nNumber of students in SWE: ${data.sweStudentsCount}. List: ${data.sweStudentsList.join(', ')}`;
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'text/plain');
-        res.end(response);
-      })
-      .catch((error) => {
-        console.error(error);
-        res.statusCode = 500;
-        res.setHeader('Content-Type', 'text/plain');
-        res.end('This is the list of our students\nCannot load the database');
-      });
-  } else if (req.url === '/') {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    res.end('Hello Holberton School!');
-  } else {
-    res.statusCode = 404;
-    res.setHeader('Content-Type', 'text/plain');
-    res.end('Not Found');
-  }
-});
+      await countStudents(process.argv[2])
+        .then((data) => {
+          const fields = Object.keys(data);
 
-app.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
-});
+          const total = fields.reduce(
+            (acc, curr) => acc + data[curr].numStudents,
+            0,
+          );
+
+          res.write(`Number of students: ${total}\n`);
+
+          for (let i = 0; i < fields.length; i += 1) {
+            res.write(
+              `Number of students in ${fields[i]}: ${
+                data[fields[i]].numStudents
+              }. `,
+            );
+            res.write(`List: ${data[fields[i]].names.join(', ')}`);
+
+            if (i < fields.length - 1) {
+              res.write('\n');
+            }
+          }
+        })
+        .catch((err) => {
+          res.write(err.message);
+        })
+        .finally(() => {
+          res.end();
+        });
+    }
+  }).listen(port);
 
 module.exports = app;
